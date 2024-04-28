@@ -18,7 +18,7 @@ seed = 12
 img_width =  224
 img_height = 224
 batch_size = 256
-epochs = 50
+epochs = 20
 
 data_dir = './flickr_logos_27_dataset/flickr_logos_27_dataset_images/'
 dest = 'logos'
@@ -82,20 +82,26 @@ def train():
     model.train()
     net_loss = 0
     correct = 0
+    total_samples = 0  # Initialize total samples counter
     for batch_idx, (data, target) in enumerate(train_loader):
         (data, target) = (data.to(device), target.to(device))
         optimizer.zero_grad()
         output = model(data)
         loss = loss_fn(output, target)
-        output = torch.exp(output) 
-        pred = output.data.max(1, keepdim=True)[1]
-        correct += pred.eq(target.data.view_as(pred)).sum()
         loss.backward()
         optimizer.step()
         
-        net_loss = net_loss + loss.item()
-    acc = correct.float() / len(train_loader.dataset)
-    return net_loss,acc
+        batch_loss = loss.item() * data.size(0)  # Multiply the average loss by batch size
+        net_loss += batch_loss  # Accumulate total loss
+        total_samples += data.size(0)  # Count total samples processed
+
+        output = torch.exp(output)
+        _, pred = output.max(1)
+        correct += pred.eq(target).sum()
+
+    net_loss /= total_samples  # Average loss per sample
+    acc = correct.float() / total_samples  # Accuracy
+    return net_loss, acc
 
 def test():
     model.eval()  
@@ -108,8 +114,8 @@ def test():
             output = model(data)
             loss = loss_fn(output, target)
             test_loss += loss.item() * data.size(0)  
-            pred = output.max(1, keepdim=True)[1]  
-            correct += pred.eq(target.view_as(pred)).sum()
+            _, pred = output.max(1)
+            correct += pred.eq(target).sum()
 
     test_loss /= len(val_loader.dataset)  
     acc = correct.float() / len(val_loader.dataset)  
