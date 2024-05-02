@@ -97,11 +97,13 @@ def start_blurring(video_file):
         st.video(output_path)
         st.text("Time taken to process video: {:.2f} seconds".format(end - start))
 
-        st.download_button(
-            label="Download Resulting Video",
-            data=output_path,
-            file_name="blurred_video.mp4",
-            mime="video/mp4"
+        with open(output_path, "rb") as f:
+            video_file = f.read()
+            st.download_button(
+                label="Download Resulting Video",
+                data=video_file,
+                file_name="blurred_video.mp4",
+                mime="video/mp4"
         )
 
     elif video_file is not None and TEST:
