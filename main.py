@@ -3,10 +3,14 @@ import streamlit as st
 import helper_functions as hf
 from ultralytics import YOLO
 from ultralytics.utils.plotting import Annotator, colors
+import time
 
 TEST = False
 
 def start_blurring(video_file):
+    # start timer using time module
+    start = time.time()
+
     # If a video file is uploaded, complete the blurring process
     # this should be modularized once the algorithm is better refined
     if TEST == False:
@@ -45,15 +49,26 @@ def start_blurring(video_file):
 
         my_bar.progress(15)
 
+        
+        num_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
+        #get frames at which to increase progress bar by 10%
+        frames = [int(num_frames/10)*i for i in range(1, 10)]
+        current_frame = 0
+
         # Process each frame of the video
         while video.isOpened():
+            current_frame += 1
+            if current_frame in frames:
+                frame_percent = 10*frames.index(current_frame) + 15
+                my_bar.progress(frame_percent)
+                print("progress: ", frame_percent, "%")
             ret, frame = video.read()
 
             if not ret:
                 print("Video frame is empty or video processing has been successfully completed.")
                 break
 
-            results = model.predict(frame, show=False)
+            results = model.predict(frame, show=False, save_txt=True, save_conf=True, conf=0.7)
             boxes = results[0].boxes.xyxy.cpu().tolist()
             clss = results[0].boxes.cls.cpu().tolist()
             annotator = Annotator(frame, line_width=2, example=names)
@@ -69,17 +84,18 @@ def start_blurring(video_file):
 
             output_video.write(frame)
 
-        my_bar.progress(95)
         video.release()
         output_video.release()
 
         my_bar.progress(100)
+        end = time.time()
         #remove progress bar
         my_bar.empty()
 
         # Display the blurred video
         st.subheader("Blurred Video")
         st.video(output_path)
+        st.text("Time taken to process video: {:.2f} seconds".format(end - start))
 
         st.download_button(
             label="Download Resulting Video",
