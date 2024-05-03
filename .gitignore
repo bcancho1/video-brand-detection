@@ -1,0 +1,2 @@
+*.mp4
+!rm -r runs/detect/predict*
