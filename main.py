@@ -1,18 +1,23 @@
 import cv2
 import streamlit as st
-import helper_functions as hf
 from ultralytics import YOLO
 from ultralytics.utils.plotting import Annotator, colors
 import time
 
+# Testing mode flag
 TEST = False
 
 def start_blurring(video_file):
+    """
+    Processes a video file to blur logos identified by our YOLO model
+
+    Args:
+    video_file: Video file uploaded by the user.
+    """
     # start timer using time module
     start = time.time()
 
     # If a video file is uploaded, complete the blurring process
-    # this should be modularized once the algorithm is better refined
     if TEST == False:
         # display a progress bar
         st.write("Processing video...")
@@ -49,7 +54,6 @@ def start_blurring(video_file):
 
         my_bar.progress(15)
 
-        
         num_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
         #get frames at which to increase progress bar by 10%
         frames = [int(num_frames/10)*i for i in range(1, 10)]
@@ -117,6 +121,9 @@ def start_blurring(video_file):
         )
 
 def start_page():
+    """
+    Creates the main page for the Streamlit app.
+    """
     st.title("Hide Brands in Your Video")
     st.markdown(
         """
